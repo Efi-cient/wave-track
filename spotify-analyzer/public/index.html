@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Analyzer PWA</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container glass">
+        <header>
+            <h1>Spotify Analyzer</h1>
+            <p class="subtitle">Your listening habits, visualized.</p>
+        </header>
+
+        <!-- Login Section -->
+        <section id="login-section">
+            <p>Connect your Spotify account to see your stats.</p>
+            <a href="/login" class="btn-primary">Login with Spotify</a>
+        </section>
+
+        <!-- Dashboard Section (Hidden by default) -->
+        <section id="dashboard-section" class="hidden">
+            <div class="user-profile">
+                <img id="user-avatar" src="" alt="User Avatar" class="avatar hidden">
+                <h2 id="user-name">Welcome back!</h2>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="card glass">
+                    <h3>Top Tracks Popularity</h3>
+                    <canvas id="popularityChart"></canvas>
+                </div>
+                <div class="card glass">
+                    <h3>Mood Analysis</h3>
+                    <canvas id="moodChart"></canvas>
+                </div>
+            </div>
+
+            <div id="top-artists" class="card glass">
+                <h3>Top Artists</h3>
+                <ul id="artist-list"></ul>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
