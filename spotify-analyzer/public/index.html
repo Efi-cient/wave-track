@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <!-- Chart.js from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <div class="background-blobs">
@@ -43,19 +45,27 @@
                     <h3>Top Tracks Popularity</h3>
                     <canvas id="popularityChart"></canvas>
                 </div>
-                <div class="card glass">
-                    <h3>Mood Analysis</h3>
-                    <canvas id="moodChart"></canvas>
-                </div>
             </div>
 
-            <div id="top-artists" class="card glass">
-                <h3>Top Artists</h3>
-                <ul id="artist-list"></ul>
+            <div class="card glass">
+                <h3>Top 100 Songs You've Played</h3>
+                <div id="top-tracks-list" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="card glass">
+                    <h3>Top Artists</h3>
+                    <ul id="artist-list"></ul>
+                </div>
+                <div class="card glass">
+                    <h3>Top Genres</h3>
+                    <ul id="genre-list"></ul>
+                </div>
             </div>
         </section>
     </main>
 
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

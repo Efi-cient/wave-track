@@ -23,12 +23,22 @@ const artistList = document.getElementById('artist-list');
  * entry point
  */
 async function init() {
+    console.log('[DEBUG] App initializing...');
     // Check for tokens in URL (Auth Callback)
     const params = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
+    const error = params.get('error');
+
+    if (error) {
+        console.error('[ERROR] Auth error:', error);
+        alert(`Login failed: ${error}`);
+        showLogin();
+        return;
+    }
 
     if (accessToken) {
+        console.log('[DEBUG] Access token found, loading dashboard...');
         // Save tokens (In memory for security, or session storage if needed, but per requirements we use variables + refresh)
         state.accessToken = accessToken;
         state.refreshToken = refreshToken;
@@ -39,6 +49,7 @@ async function init() {
         // Load App
         await loadDashboard();
     } else {
+        console.log('[DEBUG] No access token, showing login...');
         // Show Login
         showLogin();
     }
@@ -59,17 +70,23 @@ function showDashboard() {
  */
 async function loadDashboard() {
     try {
+        console.log('[DEBUG] Loading dashboard...');
         await fetchUserProfile();
+        console.log('[DEBUG] User profile loaded');
         showDashboard(); // Show dashboard as soon as profile loads
 
         await fetchTopArtists();
+        console.log('[DEBUG] Top artists loaded');
         await fetchTopTracksAndFeatures();
+        console.log('[DEBUG] Dashboard fully loaded!');
     } catch (error) {
-        console.error("Error loading dashboard:", error);
+        console.error("[ERROR] Error loading dashboard:", error);
         if (error.status === 401) {
             // Token expired or invalid
             alert("Session expired. Please login again.");
             showLogin();
+        } else {
+            alert("Error loading dashboard. Check console for details.");
         }
     }
 }
@@ -109,52 +126,111 @@ async function fetchUserProfile() {
 }
 
 /**
- * 2. Fetch Top Artists (Short Term)
+ * 2. Fetch Top Artists (Medium Term)
  */
 async function fetchTopArtists() {
-    const data = await spotifyFetch('/me/top/artists?time_range=medium_term&limit=5');
+    const data = await spotifyFetch('/me/top/artists?time_range=medium_term&limit=50');
     state.topArtists = data.items;
 
     renderTopArtists();
+    renderTopGenres();
 }
 
 function renderTopArtists() {
+    const artistList = document.getElementById('artist-list');
     artistList.innerHTML = '';
-    state.topArtists.forEach(artist => {
+    // Show top 20 artists
+    state.topArtists.slice(0, 20).forEach((artist, index) => {
         const li = document.createElement('li');
         li.innerHTML = `
-            <span>${artist.name}</span>
+            <span><strong>#${index + 1}</strong> ${artist.name}</span>
             <span style="opacity:0.7">Popularity: ${artist.popularity}%</span>
         `;
         artistList.appendChild(li);
     });
 }
 
+function renderTopGenres() {
+    const genreList = document.getElementById('genre-list');
+
+    // Extract all genres from artists
+    const genreCounts = {};
+    state.topArtists.forEach(artist => {
+        // Check if genres exist (some artists may not have genres)
+        if (artist.genres && Array.isArray(artist.genres)) {
+            artist.genres.forEach(genre => {
+                genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+            });
+        }
+    });
+
+    // Sort by count
+    const sortedGenres = Object.entries(genreCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 15);
+
+    genreList.innerHTML = '';
+    sortedGenres.forEach(([genre, count]) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>${genre}</span>
+            <span style="opacity:0.7">${count} artists</span>
+        `;
+        genreList.appendChild(li);
+    });
+}
+
 /**
- * 3. Fetch Top Tracks & Audio Features -> Render Charts
+ * 3. Fetch Top Tracks -> Render Charts and Lists
  */
 async function fetchTopTracksAndFeatures() {
-    // A. Get Top Tracks
-    const tracksData = await spotifyFetch('/me/top/tracks?time_range=medium_term&limit=10');
-    const tracks = tracksData.items;
+    console.log('[DEBUG] Fetching top 100 tracks...');
 
-    // B. Get IDs for Audio Features
-    const ids = tracks.map(t => t.id).join(',');
-    const featuresData = await spotifyFetch(`/audio-features?ids=${ids}`);
-    const features = featuresData.audio_features;
+    // Fetch in batches (Spotify limits to 50 per request)
+    const batch1 = await spotifyFetch('/me/top/tracks?time_range=medium_term&limit=50&offset=0');
+    const batch2 = await spotifyFetch('/me/top/tracks?time_range=medium_term&limit=50&offset=50');
 
-    renderPopularityChart(tracks);
-    renderMoodChart(features);
+    const allTracks = [...batch1.items, ...batch2.items];
+    console.log('[DEBUG] Total tracks fetched:', allTracks.length);
+
+    // Render top 10 chart
+    console.log('[DEBUG] Rendering popularity chart...');
+    renderPopularityChart(allTracks.slice(0, 10));
+
+    // Render full top 100 list
+    console.log('[DEBUG] Rendering top 100 tracks list...');
+    renderTopTracksList(allTracks);
+
+    console.log('[DEBUG] All content rendered successfully!');
+}
+
+function renderTopTracksList(tracks) {
+    const listContainer = document.getElementById('top-tracks-list');
+    listContainer.innerHTML = '<ol style="color: white; padding-left: 20px; line-height: 1.8;">' +
+        tracks.map((track, index) => {
+            const artists = track.artists.map(a => a.name).join(', ');
+            return `<li><strong>${track.name}</strong> - ${artists} <span style="opacity: 0.6;">(${track.popularity}% popularity)</span></li>`;
+        }).join('') +
+        '</ol>';
 }
 
 /**
  * Visualization: Bar Chart for Popularity
  */
 function renderPopularityChart(tracks) {
+    console.log('[DEBUG] renderPopularityChart called with', tracks.length, 'tracks');
+
+    if (typeof Chart === 'undefined') {
+        console.error('[ERROR] Chart.js is not loaded!');
+        alert('Chart.js failed to load. Charts will not display.');
+        return;
+    }
+
     const ctx = document.getElementById('popularityChart').getContext('2d');
     const labels = tracks.map(t => t.name.length > 15 ? t.name.substring(0, 15) + '...' : t.name);
     const data = tracks.map(t => t.popularity);
 
+    console.log('[DEBUG] Creating bar chart...');
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -177,12 +253,20 @@ function renderPopularityChart(tracks) {
             }
         }
     });
+    console.log('[DEBUG] Bar chart created');
 }
 
 /**
  * Visualization: Radar Chart for Mood
  */
 function renderMoodChart(features) {
+    console.log('[DEBUG] renderMoodChart called with', features.length, 'features');
+
+    if (typeof Chart === 'undefined') {
+        console.error('[ERROR] Chart.js is not loaded!');
+        return;
+    }
+
     // Calculate Averages
     const avg = (key) => features.reduce((sum, f) => sum + f[key], 0) / features.length;
 
@@ -194,8 +278,11 @@ function renderMoodChart(features) {
         avg('instrumentalness')
     ];
 
+    console.log('[DEBUG] Mood data:', data);
+
     const ctx = document.getElementById('moodChart').getContext('2d');
 
+    console.log('[DEBUG] Creating radar chart...');
     new Chart(ctx, {
         type: 'radar',
         data: {
@@ -227,6 +314,7 @@ function renderMoodChart(features) {
             }
         }
     });
+    console.log('[DEBUG] Radar chart created');
 }
 
 // Start App
