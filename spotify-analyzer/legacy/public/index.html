@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Analyzer PWA</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+
+<body>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar glass">
+        <div class="nav-logo">SoundStats</div>
+        <ul class="nav-links">
+            <li class="nav-item active" data-target="view-overview">Overview</li>
+            <li class="nav-item" data-target="view-tracks">Tracks</li>
+            <li class="nav-item" data-target="view-artists">Artists</li>
+            <li class="nav-item" data-target="view-insights">Insights</li>
+        </ul>
+    </nav>
+
+    <main class="app-container">
+        <!-- Login Section (Overlay) -->
+        <section id="login-section" class="view active">
+            <div class="login-container glass">
+                <h1>Spotify Analyzer</h1>
+                <p class="subtitle">Your listening habits, visualized.</p>
+                <a href="/login" class="btn-primary">Login with Spotify</a>
+            </div>
+        </section>
+
+        <!-- Dashboard Views Container -->
+        <div id="dashboard-container" class="hidden">
+
+            <!-- View 1: Overview -->
+            <section id="view-overview" class="view active">
+                <div class="user-profile glass">
+                    <img id="user-avatar" src="" alt="User Avatar" class="avatar hidden">
+                    <h2 id="user-name">Welcome back!</h2>
+                </div>
+                <div class="card glass highlight-card">
+                    <h3>Quick Stats</h3>
+                    <div class="quick-stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value" id="stat-top-artist">-</span>
+                            <span class="stat-label">Top Artist</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="stat-top-genre">-</span>
+                            <span class="stat-label">Favorite Genre</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 2: Top Tracks -->
+            <section id="view-tracks" class="view hidden">
+                <div class="card glass">
+                    <h3>Top Tracks Popularity</h3>
+                    <canvas id="popularityChart"></canvas>
+                </div>
+                <div class="card glass">
+                    <h3>Top 100 Songs</h3>
+                    <div id="top-tracks-list"></div>
+                </div>
+            </section>
+
+            <!-- View 3: Top Artists -->
+            <section id="view-artists" class="view hidden">
+                <div class="card glass">
+                    <h3>Top Artists</h3>
+                    <ul id="artist-list" class="grid-list"></ul>
+                </div>
+            </section>
+
+            <!-- View 4: Insights -->
+            <section id="view-insights" class="view hidden">
+                <div class="stats-grid">
+                    <div class="card glass">
+                        <h3>Genre Distribution (Pie)</h3>
+                        <canvas id="genrePieChart"></canvas>
+                    </div>
+                    <div class="card glass">
+                        <h3>Genre Breakdown (Donut)</h3>
+                        <canvas id="genreDonutChart"></canvas>
+                    </div>
+                </div>
+                <!-- Mood Chart Removed per user request -->
+                <div class="card glass">
+                    <h3>Top Genres List</h3>
+                    <ul id="genre-list"></ul>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script type="module" src="app.js?v=2"></script>
+</body>
+
+</html>

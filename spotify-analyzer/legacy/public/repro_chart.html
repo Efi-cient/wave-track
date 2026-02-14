@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chart Repro</title>
+    <style>
+        body {
+            background-color: #121212;
+            /* Dark bg like spotify */
+            color: white;
+            font-family: sans-serif;
+        }
+
+        .card.glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+
+<body>
+    <div class="card glass">
+        <h3>Top Tracks Popularity</h3>
+        <canvas id="popularityChart"></canvas>
+    </div>
+
+    <!-- Table Repro -->
+    <div class="card glass">
+        <h3>Top 100 Songs</h3>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cover</th>
+                        <th>Track</th>
+                        <th>Artist</th>
+                        <th>Popularity</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Chart Repro
+        Chart.register(ChartDataLabels);
+        const ctx = document.getElementById('popularityChart').getContext('2d');
+        const labels = ["Track 1", "Track 2", "Track 3", "Track 4", "Track 5"];
+        const data = [80, 65, 90, 45, 70];
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Popularity (0-100)',
+                    data: data,
+                    backgroundColor: 'rgba(29, 185, 84, 0.6)',
+                    borderColor: 'rgba(29, 185, 84, 1)',
+                    borderWidth: 1,
+                    datalabels: {
+                        align: 'end',
+                        anchor: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' }
+                    }
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, max: 120, ticks: { color: 'white' } },
+                    x: { ticks: { color: 'white' } }
+                },
+                plugins: {
+                    legend: { labels: { color: 'white' } },
+                    datalabels: { display: true, color: 'white' }
+                }
+            }
+        });
+
+        // Table Repro
+        const tableBody = document.getElementById('table-body');
+        const tracks = [
+            { name: "Track 1", artists: [{ name: "Artist A" }], popularity: 80 },
+            { name: "Track 2", artists: [{ name: "Artist B" }], popularity: 65 },
+            { name: "Track 3", artists: [{ name: "Artist C" }], popularity: 90 },
+        ];
+
+        tableBody.innerHTML = tracks.map((track, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td><div style="width:40px;height:40px;background:#333;"></div></td>
+                <td>${track.name}</td>
+                <td>${track.artists[0].name}</td>
+                <td>${track.popularity}</td>
+            </tr>
+        `).join('');
+
+        // Radar Chart Repro (Simulated Audio Features)
+        // Add canvas container dynamically for repro
+        const insightsView = document.getElementById('view-artists'); // Reusing existing view for repro
+        const radarCanvas = document.createElement('canvas');
+        radarCanvas.id = 'reproMoodChart';
+        insightsView.appendChild(radarCanvas);
+
+        const radarCtx = radarCanvas.getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Danceability', 'Energy', 'Happiness', 'Acoustic', 'Instrumental'],
+                datasets: [{
+                    label: 'Your Music Mood',
+                    data: [0.8, 0.7, 0.9, 0.2, 0.1],
+                    fill: true,
+                    backgroundColor: 'rgba(29, 185, 84, 0.4)',
+                    borderColor: '#1db954',
+                    pointBackgroundColor: '#1db954'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        pointLabels: { color: 'white', font: { size: 12 } },
+                        ticks: { display: false, backdropColor: 'transparent' },
+                        suggestedMin: 0, suggestedMax: 1
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+
+</html>
