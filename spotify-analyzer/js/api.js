@@ -1,25 +1,17 @@
-const API_KEY = '3f2d0e5b7955fb66d23d30485c3e88c1'; // User provided
-const BASE_URL = 'https://ws.audioscrobbler.com/2.0/';
+const BASE_URL = '/api/lastfm';
 
 export class LastFmClient {
     constructor() {
-        this.apiKey = API_KEY;
+        // API Key is now handled by the backend
     }
 
     setApiKey(key) {
-        this.apiKey = key;
+        // No-op
     }
 
     async _fetch(method, params) {
-        if (!this.apiKey) {
-            console.error('API Key missing');
-            return null;
-        }
-
-        const url = new URL(BASE_URL);
+        const url = new URL(BASE_URL, window.location.origin);
         url.searchParams.append('method', method);
-        url.searchParams.append('api_key', this.apiKey);
-        url.searchParams.append('format', 'json');
 
         for (const [key, value] of Object.entries(params)) {
             url.searchParams.append(key, value);
