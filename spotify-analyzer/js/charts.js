@@ -1,20 +1,24 @@
 
-// Vibrant Color Palette Generator
+// Neon Palette
+const NEON_PALETTE = [
+    '#00f2ff', // Cyan
+    '#bd00ff', // Purple
+    '#1db954', // Green
+    '#ff0055', // Pink
+    '#ffbe0b', // Yellow
+    '#ffffff'  // White
+];
+
 export function generateVibrantColors(count) {
-    const colors = [];
-    for (let i = 0; i < count; i++) {
-        // High saturation and brightness for "Neon" look
-        const h = Math.floor(Math.random() * 360);
-        const s = 100; // Max saturation
-        const l = 60;  // High brightness for dark mode contrast
-        colors.push(`hsl(${h}, ${s}%, ${l}%)`);
-    }
-    return colors;
+    // Return palette looped
+    return Array.from({ length: count }, (_, i) => NEON_PALETTE[i % NEON_PALETTE.length]);
 }
 
-// Chart Configuration Helpers
+// Chart Global Defaults
+Chart.defaults.color = '#888';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
 export function createMoodChart(ctx, tags) {
-    // tags: { label: 'Pop', count: 15 }
     const labels = tags.map(t => t.label);
     const data = tags.map(t => t.count);
     const colors = generateVibrantColors(tags.length);
@@ -27,22 +31,17 @@ export function createMoodChart(ctx, tags) {
                 data: data,
                 backgroundColor: colors,
                 borderWidth: 0,
-                hoverOffset: 10
+                hoverOffset: 15
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '70%',
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { color: '#fff', boxWidth: 12, font: { size: 11 } }
-                },
-                title: {
-                    display: true,
-                    text: 'Your Vibe (Top Genres)',
-                    color: '#fff',
-                    font: { size: 14 }
+                    labels: { color: '#fff', boxWidth: 10, font: { family: 'Outfit', size: 11 } }
                 }
             }
         }
@@ -50,26 +49,19 @@ export function createMoodChart(ctx, tags) {
 }
 
 export function createListeningClock(ctx, hourCounts) {
-    // Circular Bar Chart (Polar Area)
     return new Chart(ctx, {
         type: 'polarArea',
         data: {
-            labels: Array.from({ length: 24 }, (_, i) => {
-                if (i === 0) return '12 AM';
-                if (i === 6) return '6 AM';
-                if (i === 12) return '12 PM';
-                if (i === 18) return '6 PM';
-                return '';
-            }),
+            labels: Array.from({ length: 24 }, (_, i) => i + 'h'),
             datasets: [{
                 data: hourCounts,
                 backgroundColor: hourCounts.map(count => {
-                    // Dynamic opacity based on value
                     const max = Math.max(...hourCounts) || 1;
-                    const opacity = 0.3 + (count / max) * 0.7;
-                    return `rgba(29, 185, 84, ${opacity})`;
+                    const opacity = 0.2 + (count / max) * 0.8;
+                    return `rgba(0, 242, 255, ${opacity})`; // Cyan
                 }),
-                borderWidth: 0
+                borderWidth: 0,
+                borderColor: 'transparent'
             }]
         },
         options: {
@@ -77,20 +69,14 @@ export function createListeningClock(ctx, hourCounts) {
             maintainAspectRatio: false,
             scales: {
                 r: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    grid: { color: 'rgba(255,255,255,0.08)', circular: true },
                     ticks: { display: false, backdropColor: 'transparent' },
-                    angleLines: { color: 'rgba(255,255,255,0.1)' },
-                    pointLabels: {
-                        display: true,
-                        centerPointLabels: true,
-                        font: { size: 10 },
-                        color: '#b3b3b3'
-                    }
+                    angleLines: { color: 'rgba(255,255,255,0.08)' },
+                    pointLabels: { display: false } // Cleaner look
                 }
             },
             plugins: {
-                legend: { display: false },
-                datalabels: { display: false } // Hide data labels if plugin is active
+                legend: { display: false }
             }
         }
     });

@@ -1,15 +1,23 @@
-// SpotAPI Backend Client
-const BASE_URL = '/api';
+// Last.fm Client via Vercel Proxy
+const PROXY_URL = '/api/proxy';
 
 export class LastFmClient {
-    // Keeping class name for compatibility with app.js
     constructor() { }
 
-    async _fetch(endpoint) {
+    async _fetch(method, params = {}) {
+        const url = new URL(PROXY_URL, window.location.origin);
+        url.searchParams.append('method', method);
+
+        for (const [key, value] of Object.entries(params)) {
+            if (value !== undefined && value !== null) {
+                url.searchParams.append(key, value);
+            }
+        }
+
         try {
-            const response = await fetch(`${BASE_URL}${endpoint}`);
+            const response = await fetch(url);
             if (!response.ok) {
-                throw new Error(`Backend Error: ${response.status}`);
+                throw new Error(`API Error: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
@@ -19,26 +27,26 @@ export class LastFmClient {
     }
 
     async getUserInfo(user) {
-        return this._fetch(`/user/${user}/overview`);
+        return this._fetch('user.getInfo', { user });
     }
 
     async getRecentTracks(user, limit = 10) {
-        return this._fetch(`/user/${user}/recent`);
+        return this._fetch('user.getRecentTracks', { user, limit });
     }
 
     async getTopArtists(user, period = '7day', limit = 10) {
-        return this._fetch('/stats/top-artists');
+        return this._fetch('user.getTopArtists', { user, period, limit });
     }
 
     async getTopTracks(user, period = '7day', limit = 10) {
-        return this._fetch('/stats/top-tracks');
+        return this._fetch('user.getTopTracks', { user, period, limit });
     }
 
     async getArtistTags(artist) {
-        return null;
+        return this._fetch('artist.getTopTags', { artist });
     }
 
-    async getListeningHistory() {
-        return this._fetch('/stats/history');
-    }
+    // Note: getListeningHistory is not a direct API method, 
+    // it requires processing recent tracks over time. 
+    // For now we'll stick to what we have in app.js which calculates it from recent tracks.
 }

@@ -5,146 +5,151 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#121212">
-    <title>SoundStats PWA</title>
+    <meta name="theme-color" content="#0a0a0a">
+    <title>SoundStats</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="assets/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 
-    <!-- Chart.js from CDN -->
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 </head>
 
 <body>
 
-    <div class="background-blobs">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
 
-    <!-- Navigation Bar -->
-    <nav class="navbar glass">
-        <div class="nav-logo">SoundStats</div>
-        <ul class="nav-links">
-            <li class="nav-item active" data-target="view-overview">Overview</li>
-            <li class="nav-item" data-target="view-tracks">Tracks</li>
-            <li class="nav-item" data-target="view-artists">Artists</li>
-            <li class="nav-item" data-target="view-insights">Insights</li>
-        </ul>
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="logo">SoundStats</div>
+        <div class="nav-items">
+            <button class="nav-btn active" data-target="view-overview">Overview</button>
+            <button class="nav-btn" data-target="view-tracks">Tracks</button>
+            <button class="nav-btn" data-target="view-artists">Artists</button>
+            <button class="nav-btn" data-target="view-insights">Insights</button>
+        </div>
     </nav>
 
-    <main class="app-container">
-        <!-- Login Section (Last.fm Username) -->
-        <section id="login-section" class="view active">
-            <div class="login-container glass">
-                <h1>SoundStats</h1>
-                <p class="subtitle">Mobile-First Last.fm Analyzer</p>
-                <form id="login-form">
-                    <input type="text" id="username-input" placeholder="Enter Last.fm Username" required
-                        aria-label="Last.fm Username">
-                    <button type="submit" class="btn-primary">Connect</button>
+    <main class="container">
 
+        <!-- Login View -->
+        <section id="login-section" class="view active-view">
+            <div class="hero-card glass-panel">
+                <div class="glitch-wrapper">
+                    <h1 class="glitch" data-text="SoundStats">SoundStats</h1>
+                </div>
+                <p class="subtitle">Antigravity Edition</p>
+
+                <form id="login-form">
+                    <div class="input-group">
+                        <input type="text" id="username-input" placeholder="Last.fm Username" autocomplete="off"
+                            required>
+                        <div class="input-border"></div>
+                    </div>
+                    <button type="submit" class="neon-btn">
+                        <span>Connect</span>
+                        <div class="btn-glow"></div>
+                    </button>
                 </form>
 
-                <div class="divider" style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1);"></div>
+                <div class="divider"><span>OR</span></div>
 
-                <!-- Offline Analysis Section -->
-                <div id="offline-section">
-                    <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 10px;">Or analyze your past:</p>
-
-                    <div id="drop-zone" class="drop-zone">
-                        <p>Drop <code>StreamingHistory.json</code> here</p>
-                        <span style="font-size: 0.7em; color: #888;">(Click to browse)</span>
-                    </div>
-                    <input type="file" id="json-file-input" accept=".json" style="display: none;">
-
-                    <a href="https://www.spotify.com/account/privacy/" target="_blank" class="text-link"
-                        style="display: block; margin-top: 10px; font-size: 0.8rem; color: #1DB954;">
-                        Request Data from Spotify &rarr;
-                    </a>
+                <div id="drop-zone" class="upload-zone">
+                    <div class="icon">📂</div>
+                    <p>Drop <code>StreamingHistory.json</code></p>
                 </div>
-
-                <div class="help-text" style="margin-top: 20px; font-size: 0.8rem; color: #b3b3b3;">
-                    <p>1. Create a <a href="https://www.last.fm/join" target="_blank"
-                            style="color: var(--primary-color);">Last.fm account</a></p>
-                    <p>2. Link your <a href="https://www.last.fm/settings/applications" target="_blank"
-                            style="color: var(--primary-color);">Spotify account</a></p>
-                    <p>3. Enter your username above!</p>
-                </div>
+                <input type="file" id="json-file-input" hidden accept=".json">
             </div>
         </section>
 
-        <!-- Dashboard Views Container -->
+        <!-- Dashboard Container -->
         <div id="dashboard-container" class="hidden">
 
-            <!-- View 1: Overview -->
-            <section id="view-overview" class="view active">
-                <div class="user-profile glass">
-                    <img id="user-avatar" src="assets/default-avatar.svg" alt="User Avatar" class="avatar">
-                    <h2 id="user-name">Welcome!</h2>
-                </div>
-                <!-- Quick Stats & Recent Tracks will go here -->
-                <div class="card glass">
-                    <h3>Recent Scrobbles</h3>
-                    <ul id="recent-tracks-list" class="track-list"></ul>
-                </div>
-            </section>
-
-            <!-- View 2: Top Tracks -->
-            <section id="view-tracks" class="view hidden">
-                <div class="card glass">
-                    <div class="filter-header" style="margin-bottom: 15px;">
-                        <h3>Top Tracks</h3>
-                        <div class="filter-pills">
-                            <button class="filter-pill" data-period="7day">7 Days</button>
-                            <button class="filter-pill" data-period="1month">Month</button>
-                            <button class="filter-pill active" data-period="12month">Year</button>
-                            <button class="filter-pill" data-period="overall">All Time</button>
+            <!-- Overview View -->
+            <section id="view-overview" class="view active-view">
+                <div class="profile-header glass-panel">
+                    <div class="profile-content">
+                        <div class="avatar-container">
+                            <img id="user-avatar" src="assets/default-avatar.svg" alt="User" class="avatar">
+                            <div class="avatar-glow"></div>
+                        </div>
+                        <div class="user-info">
+                            <h2 id="user-name">Loading...</h2>
+                            <div class="stat-badges">
+                                <span class="badge">Scrobbling since <span id="user-since">-</span></span>
+                            </div>
                         </div>
                     </div>
-                    <div id="top-tracks-list"></div>
                 </div>
-            </section>
 
-            <!-- View 3: Top Artists -->
-            <section id="view-artists" class="view hidden">
-                <div class="card glass">
-                    <h3>Top Artists</h3>
-                    <ul id="artist-list" class="grid-list"></ul>
-                </div>
-            </section>
-
-            <!-- View 4: Insights -->
-            <section id="view-insights" class="view hidden">
-                <div class="card glass">
-                    <h3>Listening Clock (24h)</h3>
-                    <div style="height: 300px; position: relative;">
-                        <canvas id="listeningClock"></canvas>
+                <div class="grid-layout">
+                    <!-- Recent Tracks -->
+                    <div class="glass-panel tall-panel">
+                        <h3><span class="pulse-dot"></span> Live Scrobbles</h3>
+                        <ul id="recent-tracks-list" class="track-list">
+                            <!-- JS Injected -->
+                        </ul>
                     </div>
                 </div>
+            </section>
 
-                <div class="stats-grid">
-                    <div class="card glass">
-                        <h3>Mood (Top Genres)</h3>
-                        <div style="height: 250px; position: relative;">
+            <!-- Tracks View -->
+            <section id="view-tracks" class="view hidden">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h3>Top Tracks</h3>
+                        <div class="time-filters">
+                            <button class="filter-chip" data-period="7day">7D</button>
+                            <button class="filter-chip" data-period="1month">1M</button>
+                            <button class="filter-chip active" data-period="12month">1Y</button>
+                            <button class="filter-chip" data-period="overall">All</button>
+                        </div>
+                    </div>
+                    <div id="top-tracks-list" class="scroll-container">
+                        <!-- JS Injected table -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Artists View -->
+            <section id="view-artists" class="view hidden">
+                <div class="glass-panel">
+                    <h3>Top Artists</h3>
+                    <div id="artist-list" class="artist-grid">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Insights View -->
+            <section id="view-insights" class="view hidden">
+                <div class="grid-layout">
+                    <div class="glass-panel">
+                        <h3>Listening Clock</h3>
+                        <div class="chart-container">
+                            <canvas id="listeningClock"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-panel">
+                        <h3>Moods</h3>
+                        <div class="chart-container">
                             <canvas id="moodChart"></canvas>
                         </div>
                     </div>
-                    <div class="card glass">
-                        <h3>Top Artists Share</h3>
-                        <div style="height: 250px; position: relative;">
+                    <div class="glass-panel full-width">
+                        <h3>Genre Distribution</h3>
+                        <div class="chart-container">
                             <canvas id="genrePieChart"></canvas>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card glass">
-                    <h3>Top Tracks Popularity</h3>
-                    <div style="height: 250px; position: relative;">
-                        <canvas id="popularityChart"></canvas>
                     </div>
                 </div>
             </section>
@@ -154,12 +159,9 @@
 
     <script type="module" src="js/app.js"></script>
     <script>
+        // Inline SW registration for simplicity
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW registered!', reg))
-                    .catch(err => console.log('SW failed', err));
-            });
+            navigator.serviceWorker.register('./sw.js').catch(console.error);
         }
     </script>
 </body>

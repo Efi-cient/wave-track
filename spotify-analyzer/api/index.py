@@ -1,71 +1,79 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+import httpx
 import os
-import sys
-from unittest.mock import MagicMock
+from dotenv import load_dotenv
 
-# --- SPOTAPI SHIM (Embedded) ---
-sys.modules["pymongo"] = MagicMock()
-sys.modules["redis"] = MagicMock()
-sys.modules["websockets"] = MagicMock()
-sys.modules["websockets.sync.client"] = MagicMock()
-# -------------------------------
-
-try:
-    import spotapi
-    from spotapi.utils.saver import SqliteSaver
-    # Use /tmp for Vercel ephemeral storage
-    # Note: Sessions will be lost on cold boot/redeployment
-    session_path = "/tmp/spotify_session.db" if os.environ.get("VERCEL") else "spotify_session.db"
-    session_saver = SqliteSaver(session_path)
-    USE_SPOTAPI = True
-except ImportError:
-    USE_SPOTAPI = False
+load_dotenv()
 
 app = FastAPI()
 
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, restrict this to your domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Vercel needs absolute paths or handling for static files
-# We'll just define the API routes here. File serving is handled by Vercel's output system usually,
-# but for a Python runtime, we might need to serve them if they are in the same repo.
-# However, standard Vercel usage puts static files in /public or root.
-# Since we are in /api, we focus on API.
+LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
+LASTFM_BASE_URL = "http://ws.audioscrobbler.com/2.0/"
 
-@app.get("/api/user/{username}/overview")
-def get_user_overview(username: str):
-    # Mock data for now as we don't have login
-    return {
-        "username": username,
-        "total_songs": 1250, 
-        "unique_artists": 340,
-        "image": "assets/default-avatar.svg"
+@app.get("/api/proxy")
+async def proxy_lastfm(method: str, user: str = None, limit: int = 10, period: str = "7day", artist: str = None):
+    """
+    Proxy requests to Last.fm API to hide the API Key.
+    """
+    if not LASTFM_API_KEY:
+        raise HTTPException(status_code=500, detail="LASTFM_API_KEY is not set in server environment.")
+
+    params = {
+        "method": method,
+        "api_key": LASTFM_API_KEY,
+        "format": "json"
     }
 
-@app.get("/api/user/{username}/recent")
-def get_recent_tracks(username: str):
-    # Mock data
-    return {"recenttracks": {"track": []}}
+    if user:
+        params["user"] = user
+    if limit:
+        params["limit"] = limit
+    if period:
+        params["period"] = period
+    if artist:
+        params["artist"] = artist
 
-@app.get("/api/stats/history")
-def get_listening_history():
-    return {
-        "months": [],
-        "counts": []
-    }
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(LASTFM_BASE_URL, params=params)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/stats/top-artists")
-def get_top_artists():
-    return {"topartists": {"artist": []}}
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "service": "SoundStats API"}
 
-@app.get("/api/stats/top-tracks")
-def get_top_tracks():
-    return {"toptracks": {"track": []}}
+# --- Static File Serving (For Local Dev) ---
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Mount static directories
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+app.mount("/css", StaticFiles(directory="css"), name="css")
+app.mount("/js", StaticFiles(directory="js"), name="js")
+
+@app.get("/")
+async def read_index():
+    return FileResponse('index.html')
+
+@app.get("/manifest.json")
+async def read_manifest():
+    return FileResponse('manifest.json')
+
+@app.get("/sw.js")
+async def read_sw():
+    return FileResponse('sw.js')
